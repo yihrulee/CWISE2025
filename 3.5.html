@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3-5-1 心血管系統：總結性評量</title>
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --secondary-color: #3498db;
+            --correct-color: #27ae60;
+            --wrong-color: #e74c3c;
+            --warning-color: #f39c12;
+            --bg-color: #f1f4f9;
+        }
+        body { font-family: "PingFang TC", "Microsoft JhengHei", sans-serif; background-color: var(--bg-color); color: var(--primary-color); padding: 20px; margin: 0; }
+        .container { max-width: 900px; margin: 0 auto; background: white; padding: 40px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
+        h1 { text-align: center; color: var(--primary-color); border-bottom: 3px solid var(--secondary-color); padding-bottom: 10px; }
+        .intro { background: #e8f4fd; padding: 15px; border-radius: 8px; margin-bottom: 30px; font-size: 0.95em; }
+        
+        .question-block { margin-bottom: 40px; padding-bottom: 20px; border-bottom: 1px dashed #ccc; }
+        .question-title { font-size: 1.15em; font-weight: bold; margin-bottom: 15px; color: #34495e; }
+        .options-grid { display: grid; gap: 12px; }
+        .option-label { display: flex; align-items: center; padding: 12px 15px; border: 1.5px solid #dcdfe6; border-radius: 8px; cursor: pointer; transition: 0.2s; }
+        .option-label:hover { background-color: #f9fbff; border-color: var(--secondary-color); }
+        .option-label input { margin-right: 12px; transform: scale(1.2); }
+        
+        input[type="radio"]:checked + span { font-weight: bold; color: var(--secondary-color); }
+        input[type="radio"]:checked + .option-label { border-color: var(--secondary-color); background-color: #f0f7ff; }
+
+        .submit-area { text-align: center; margin-top: 50px; }
+        .btn-submit { background-color: var(--secondary-color); color: white; padding: 15px 60px; border: none; border-radius: 30px; font-size: 1.2em; cursor: pointer; transition: 0.3s; }
+        .btn-submit:hover { background-color: #2980b9; transform: translateY(-2px); }
+
+        /* 結果顯示與診斷區 */
+        #result-display { display: none; margin-top: 40px; }
+        .score-box { text-align: center; padding: 30px; background: white; border: 4px solid var(--secondary-color); border-radius: 15px; margin-bottom: 30px; }
+        .score-num { font-size: 2.5em; font-weight: bold; color: var(--secondary-color); margin: 15px 0; }
+        .screenshot-notice { color: var(--wrong-color); font-weight: bold; font-size: 1.2em; margin-top: 10px; border: 2px dashed var(--wrong-color); display: inline-block; padding: 5px 15px; border-radius: 5px; }
+        
+        /* 診斷卡片設計 */
+        .diagnostic-card { border: 2px solid var(--warning-color); border-radius: 12px; padding: 20px; margin-bottom: 25px; background: #fffdf6; display: flex; gap: 20px; align-items: flex-start; }
+        .diagnostic-icon { font-size: 2.5em; flex-shrink: 0; }
+        .diagnostic-content h4 { margin: 0 0 10px 0; color: #d35400; font-size: 1.2em; }
+        .diagnostic-content p { margin: 0; font-size: 0.95em; color: #5d4037; line-height: 1.6; }
+
+        .feedback-item { padding: 15px; margin-bottom: 15px; border-radius: 8px; border-left: 6px solid #ccc; }
+        .feedback-item.correct { border-left-color: var(--correct-color); background: #f1fcf4; }
+        .feedback-item.wrong { border-left-color: var(--wrong-color); background: #fff5f5; }
+        .feedback-q-text { font-weight: bold; color: #34495e; display: block; margin-bottom: 5px; border-bottom: 1px solid #eee; padding-bottom: 5px; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>人體循環系統：總結性評量</h1>
+    <div class="intro">
+        💡 <b>填寫說明：</b> 提交答案後，系統會自動分析你的錯誤題目，並針對你混淆的觀念給予「個別診斷與複習建議」。
+    </div>
+
+    <form id="quiz-form">
+        <div id="questions-container"></div>
+        <div class="submit-area">
+            <button type="button" class="btn-submit" onclick="gradeQuiz()">提交答案並生成報告</button>
+        </div>
+    </form>
+
+    <div id="result-display">
+        <div class="score-box">
+            <h2>總結性評量成績</h2>
+            <div class="score-num" id="final-score-text">你答對了 0 / 15 題</div>
+            <p id="evaluation-text" style="font-weight: bold;"></p>
+            <div class="screenshot-notice">請將評量成績截圖上傳</div>
+        </div>
+
+        <h3 id="diagnosis-title">🩺 針對性複習建議（根據你的錯題分析）</h3>
+        <div id="diagnosis-container"></div>
+
+        <hr style="margin: 40px 0;">
+        <h3>逐題詳細解析</h3>
+        <div id="analysis-container"></div>
+        <div style="text-align:center; margin-top:20px;">
+            <button class="btn-submit" onclick="window.scrollTo(0,0); location.reload();">重新測試</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    const quizData = [
+        { q: "當我們觀察心臟構造示意圖時，標示為「左心室」的部位通常位於圖片的哪一側？", options: ["圖片的左側", "圖片的右側", "圖片的正中央", "圖片的上方"], correct: 1, cat: "方位", feedback: "方位應以受測者為準，您的右手邊即為受測者的左側。" },
+        { q: "動脈的管壁較厚且富彈性，其主要的生理功能為何？", options: ["讓養分快速滲透到組織細胞", "防止血液在流動中產生逆流", "承受心臟收縮時擠壓出的血液高壓", "增加血液中二氧化碳的擴散速度"], correct: 2, cat: "血管", feedback: "動脈的高彈性與厚度是為了承受心室泵血時的巨大血壓。" },
+        { q: "下列關於人體血管內「瓣膜」的敘述，何者正確？", options: ["所有的血管都具有瓣膜", "瓣膜僅存在於心臟內", "存在於心臟及部分靜脈中", "動脈壓力大，所以更需要瓣膜"], correct: 2, cat: "血管", feedback: "瓣膜存在於心臟及部分靜脈中，用以防止血液逆流。" },
+        { q: "有關「肺動脈」內流動的血液性質，下列敘述何者正確？", options: ["因為是動脈，所以流動著鮮紅色的充氧血", "含較高濃度二氧化碳，屬於缺氧血", "含有豐富養分準備送往全身", "流速最慢以利於進行物質交換"], correct: 1, cat: "肺循環", feedback: "肺動脈是將缺氧血送往肺部微血管進行交換。" },
+        { q: "人體的「體循環」與「肺循環」在運作時間上具有什麼特性？", options: ["兩者同時進行，在心臟交會", "先完成體循環後才啟動肺循環", "白天進行體循環，晚上進行肺循環", "體循環負責氧氣，肺循環只負責廢物"], correct: 0, cat: "運作", feedback: "體循環與肺循環在心臟交會且同時進行。" },
+        { q: "小明受傷流血，傷口自動停止流血並結痂，這主要是哪種成分的功勞？", options: ["紅血球", "白血球", "血漿", "血小板"], correct: 3, cat: "血球", feedback: "血小板的功能是促使血液凝固、阻塞傷口。" },
+        { q: "關於血管性質的比較，下列敘述何者正確？", options: ["血壓高低：動脈 > 微血管 > 靜脈", "管腔大小：動脈 > 靜脈 > 微血管", "流速快慢：微血管 > 靜脈 > 動脈", "壁厚程度：微血管 > 靜脈 > 動脈"], correct: 0, cat: "血管", feedback: "血壓由動脈起最高，靜脈最低；微血管則流速最慢。" },
+        { q: "在顯微鏡下觀察血液抹片時，若看到具有「細胞核」的細胞，最可能是？", options: ["紅血球", "白血球", "血小板", "血漿養分結晶"], correct: 1, cat: "血球", feedback: "白血球具有細胞核，而成熟紅血球與血小板皆無細胞核。" },
+        { q: "人體內進行「氣體交換」（氧氣與二氧化碳擴散）的確切地點是在何處？", options: ["主動脈", "微血管", "右心房", "大靜脈"], correct: 1, cat: "血管", feedback: "微血管僅由一層細胞組成，是進行物質交換的唯一場所。" },
+        { q: "血液中的「血漿」主要成分是水，除了運送廢物外，還負責運送？", options: ["大部分的氧氣", "激素與養分", "病原體", "紅血球的細胞核"], correct: 1, cat: "血球", feedback: "血漿溶有養分、激素、抗體及代謝廢物。" },
+        { q: "關於「肺循環」的終點，血液最終會流入心臟的哪一個腔室？", options: ["左心房", "右心房", "左心室", "右心室"], correct: 0, cat: "肺循環", feedback: "換氧後的充氧血經由肺靜脈流回左心房。" },
+        { q: "心臟的「左心室」壁比「右心室」壁厚，主因與下列何者最相關？", options: ["左側裝的是充氧血，比較重", "為了防止血液逆流回左心房", "需要產生足夠壓力將血液送到全身", "左心室負責接收肺部的壓力"], correct: 2, cat: "方位", feedback: "左心室為體循環起點，需產生大壓力將血液送往全身。" },
+        { q: "醫生從病人手臂抽血或注射藥物，通常是選擇哪一種血管？", options: ["動脈", "微血管", "靜脈", "瓣膜處"], correct: 2, cat: "血管", feedback: "靜脈位於淺層且壓力低，是臨床抽血的首選。" },
+        { q: "人體血液循環系統中，哪一條血管內流動的血液「氧氣含量最高」？", options: ["肺動脈", "上大靜脈", "肺靜脈", "右心房內的血"], correct: 2, cat: "肺循環", feedback: "肺靜脈裝載剛換好的氧氣回流心臟，含氧量最高。" },
+        { q: "小華吃下感冒藥後，藥效能作用到鼻子，這主要是依賴？", options: ["藥物從食道直接爬到鼻腔", "藥物經由血液循環運輸至全身", "鼻子主動吸取胃部的藥物", "藥物隨著神經傳導移動"], correct: 1, cat: "運作", feedback: "血液循環負責體內所有物質的運輸工作。" }
+    ];
+
+    const diagnosisTips = {
+        "方位": { icon: "🧭", title: "空間方位觀念", text: "你對心臟腔室的左右對應有所混淆。記得：考卷上的心臟是面對你的病人，你的右手對應對方的左側。另外，左心室壁較厚是因為它要負責路程最遠的體循環。" },
+        "血管": { icon: "🛣️", title: "血管特性與功能", text: "你似乎混淆了三種血管的特徵。請記住：動脈是『耐高壓』、微血管是『拼交換』（只有一層細胞厚）、靜脈是『靠瓣膜』防止血液倒流。" },
+        "肺循環": { icon: "🫁", title: "肺循環與含氧量", text: "注意！肺循環是最大的陷阱區。並非動脈都裝氧氣，肺動脈裝的是缺氧血；而肺靜脈才是全身氧氣最充足、顏色最鮮紅的血管。" },
+        "血球": { icon: "🔬", title: "血液成分特徵", text: "關於血球，請鎖定核心關鍵字：白血球有『核』、紅血球負責『氧』、血小板負責『止血』。血漿則是負責運送溶解在水裡的物質（養分、廢物、激素）。" },
+        "運作": { icon: "🔄", title: "循環同步性觀念", text: "請修正觀念：體循環與肺循環是『同時發生的』，血液一邊被泵往全身，另一邊正被泵往肺部，並非先後接力跑完一圈。" }
+    };
+
+    const container = document.getElementById('questions-container');
+    quizData.forEach((item, index) => {
+        const qDiv = document.createElement('div');
+        qDiv.className = 'question-block';
+        qDiv.innerHTML = `<div class="question-title">${index + 1}. ${item.q}</div><div class="options-grid">${item.options.map((opt, i) => `<label class="option-label"><input type="radio" name="q${index}" value="${i}"><span>${opt}</span></label>`).join('')}</div>`;
+        container.appendChild(qDiv);
+    });
+
+    function gradeQuiz() {
+        let score = 0;
+        let wrongCats = new Set();
+        const analysis = document.getElementById('analysis-container');
+        analysis.innerHTML = '';
+        let allAnswered = true;
+
+        quizData.forEach((item, index) => {
+            const selected = document.querySelector(`input[name="q${index}"]:checked`);
+            if (!selected) { allAnswered = false; return; }
+            const userAns = parseInt(selected.value);
+            const isCorrect = userAns === item.correct;
+            if (isCorrect) {
+                score++;
+            } else {
+                wrongCats.add(item.cat);
+            }
+            const feedbackDiv = document.createElement('div');
+            feedbackDiv.className = `feedback-item ${isCorrect ? 'correct' : 'wrong'}`;
+            feedbackDiv.innerHTML = `<span class="feedback-q-text">第 ${index + 1} 題：${item.q}</span><strong>結果：${isCorrect ? '正確' : '錯誤'}</strong><br>您的選擇：${item.options[userAns]}<br>正確答案：${item.options[item.correct]}<p>💡 解析：${item.feedback}</p>`;
+            analysis.appendChild(feedbackDiv);
+        });
+
+        if (!allAnswered) { alert("請完成所有題目後再提交喔！"); return; }
+
+        document.getElementById('final-score-text').innerText = `你答對了 ${score} / 15 題`;
+        
+        const diagContainer = document.getElementById('diagnosis-container');
+        diagContainer.innerHTML = '';
+        if (wrongCats.size === 0) {
+            diagContainer.innerHTML = '<div class="diagnostic-card" style="border-color: var(--correct-color); background: #f1fcf4;"><div class="diagnostic-icon">🏅</div><div class="diagnostic-content"><h4>完美掌控！</h4><p>你完全避開了所有常見的思維陷阱，觀念非常紮實。</p></div></div>';
+        } else {
+            wrongCats.forEach(cat => {
+                const tip = diagnosisTips[cat];
+                const card = document.createElement('div');
+                card.className = 'diagnostic-card';
+                card.innerHTML = `<div class="diagnostic-icon">${tip.icon}</div><div class="diagnostic-content"><h4>${tip.title}</h4><p>${tip.text}</p></div>`;
+                diagContainer.appendChild(card);
+            });
+        }
+
+        let evalText = score === 15 ? "🏆 你是運輸系統專家！" : score >= 12 ? "✨ 非常優秀，只要釐清診斷報告中的細節即可。" : "📖 基礎觀念尚可，請務必詳閱診斷建議。";
+        document.getElementById('evaluation-text').innerText = evalText;
+        document.getElementById('quiz-form').style.display = 'none';
+        document.getElementById('result-display').style.display = 'block';
+        window.scrollTo(0, 0);
+    }
+</script>
+</body>
+</html>

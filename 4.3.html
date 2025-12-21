@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3-4 人體的防禦作用：總結性評量</title>
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --secondary-color: #3498db;
+            --correct-color: #27ae60;
+            --wrong-color: #e74c3c;
+            --warning-color: #f39c12;
+            --bg-color: #f1f4f9;
+        }
+        body { font-family: "PingFang TC", "Microsoft JhengHei", sans-serif; background-color: var(--bg-color); color: var(--primary-color); padding: 20px; margin: 0; }
+        .container { max-width: 900px; margin: 0 auto; background: white; padding: 40px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
+        h1 { text-align: center; color: var(--primary-color); border-bottom: 3px solid var(--secondary-color); padding-bottom: 10px; }
+        .intro { background: #e8f4fd; padding: 15px; border-radius: 8px; margin-bottom: 30px; font-size: 0.95em; }
+        
+        .question-block { margin-bottom: 40px; padding-bottom: 20px; border-bottom: 1px dashed #ccc; }
+        .question-title { font-size: 1.15em; font-weight: bold; margin-bottom: 15px; color: #34495e; line-height: 1.5; }
+        .options-grid { display: grid; gap: 12px; }
+        .option-label { display: flex; align-items: center; padding: 12px 15px; border: 1.5px solid #dcdfe6; border-radius: 8px; cursor: pointer; transition: 0.2s; }
+        .option-label:hover { background-color: #f9fbff; border-color: var(--secondary-color); }
+        .option-label input { margin-right: 12px; transform: scale(1.2); }
+        
+        input[type="radio"]:checked + span { font-weight: bold; color: var(--secondary-color); }
+        input[type="radio"]:checked + .option-label { border-color: var(--secondary-color); background-color: #f0f7ff; }
+
+        .quiz-image-box { background: #fff; border: 1px solid #eee; padding: 15px; margin: 15px 0; border-radius: 8px; text-align: center; }
+        .chart-label { font-size: 12px; fill: #7f8c8d; }
+
+        .submit-area { text-align: center; margin-top: 50px; }
+        .btn-submit { background-color: var(--secondary-color); color: white; padding: 15px 60px; border: none; border-radius: 30px; font-size: 1.2em; cursor: pointer; transition: 0.3s; }
+        .btn-submit:hover { background-color: #2980b9; transform: translateY(-2px); }
+
+        #result-display { display: none; margin-top: 40px; }
+        .score-box { text-align: center; padding: 30px; background: white; border: 4px solid var(--secondary-color); border-radius: 15px; margin-bottom: 30px; }
+        .score-num { font-size: 2.5em; font-weight: bold; color: var(--secondary-color); margin: 15px 0; }
+        .screenshot-notice { color: var(--wrong-color); font-weight: bold; font-size: 1.2em; margin-top: 10px; border: 2px dashed var(--wrong-color); display: inline-block; padding: 10px 20px; border-radius: 5px; background: #fff5f5; }
+        
+        .diagnostic-card { border: 2px solid var(--warning-color); border-radius: 12px; padding: 20px; margin-bottom: 25px; background: #fffdf6; display: flex; gap: 20px; align-items: flex-start; }
+        .diagnostic-icon { font-size: 2.5em; flex-shrink: 0; }
+        .diagnostic-content h4 { margin: 0 0 10px 0; color: #d35400; font-size: 1.2em; }
+        .diagnostic-content p { margin: 0; font-size: 0.95em; color: #5d4037; line-height: 1.6; }
+
+        .feedback-item { padding: 15px; margin-bottom: 15px; border-radius: 8px; border-left: 6px solid #ccc; background: #fff; border-top: 1px solid #eee; border-right: 1px solid #eee; border-bottom: 1px solid #eee; }
+        .feedback-item.correct { border-left-color: var(--correct-color); background: #f1fcf4; }
+        .feedback-item.wrong { border-left-color: var(--wrong-color); background: #fff5f5; }
+        .feedback-q-text { font-weight: bold; color: #34495e; display: block; margin-bottom: 10px; border-bottom: 1px solid #eee; padding-bottom: 5px; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>人體防禦作用：總結性評量</h1>
+    <div class="intro">
+        💡 <b>填寫說明：</b> 請完成下方 15 題單選題。提交後，系統將自動分析你的錯題，並生成個別診斷建議。
+    </div>
+
+    <form id="quiz-form">
+        <div id="questions-container"></div>
+        <div class="submit-area">
+            <button type="button" class="btn-submit" onclick="gradeQuiz()">提交答案並生成報告</button>
+        </div>
+    </form>
+
+    <div id="result-display">
+        <div class="score-box">
+            <h2>總結性評量成績</h2>
+            <div class="score-num" id="final-score-text">你答對了 0 / 15 題</div>
+            <p id="evaluation-text" style="font-weight: bold;"></p>
+            <div class="screenshot-notice">📸 請將評量成績截圖上傳</div>
+        </div>
+
+        <h3 id="diagnosis-title">🩺 針對性複習建議（根據你的錯題分析）</h3>
+        <div id="diagnosis-container"></div>
+
+        <hr style="margin: 40px 0;">
+        <h3>逐題詳細解析</h3>
+        <div id="analysis-container"></div>
+        <div style="text-align:center; margin-top:20px;">
+            <button class="btn-submit" onclick="window.scrollTo(0,0); location.reload();">重新測試</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    // 獨立定義 SVG 圖表，確保不干擾題文字串
+    const chartHtml = `
+    <div class="quiz-image-box">
+        <svg width="320" height="190" viewBox="0 0 320 190">
+            <line x1="40" y1="150" x2="300" y2="150" stroke="#333" stroke-width="2" />
+            <line x1="40" y1="150" x2="40" y2="20" stroke="#333" stroke-width="2" />
+            <text x="10" y="25" class="chart-label" writing-mode="tb">防禦強度</text>
+            <text x="270" y="140" class="chart-label">時間</text>
+            <path d="M 40 150 Q 80 80 120 150" fill="none" stroke="#3498db" stroke-width="3" />
+            <text x="50" y="95" class="chart-label" fill="#3498db">第一次反應</text>
+            <text x="25" y="170" class="chart-label" font-weight="bold">打疫苗</text>
+            <path d="M 220 150 Q 255 -20 290 150" fill="none" stroke="#e74c3c" stroke-width="3" />
+            <text x="225" y="45" class="chart-label" fill="#e74c3c">第二次反應</text>
+            <text x="205" y="170" class="chart-label" font-weight="bold">病原體入侵</text>
+        </svg>
+    </div>`;
+
+    const quizData = [
+        { q: "環境中有些微生物會導致生物體生病，例如病毒或細菌等，我們統稱為下列何者？", options: ["病原體", "血小板", "組織液", "抗體"], correct: 0, cat: "基礎", feedback: "會導致疾病的微生物稱為病原體 [cite: 218]。" },
+        { q: "人體防禦作用中，第一道防線主要是靠皮膜的阻隔，下列何者「不屬於」此範疇？", options: ["皮膚阻隔", "胃部的鹽酸", "呼吸道的黏膜", "白血球的吞噬"], correct: 3, cat: "皮膜", feedback: "白血球屬於第二或第三道防線，不屬於第一道皮膜阻隔 [cite: 226, 233]。" },
+        { q: "有關人體第一道防線（皮膜阻隔）的敘述，下列何者正確？", options: ["只對細菌有效", "屬於非專一性防禦作用", "會產生抗體來阻擋異物", "受損時會出現發炎反應"], correct: 1, cat: "皮膜", feedback: "皮膜阻隔屬於非專一性防禦，不針對特定的病原體 [cite: 247]。" },
+        { q: "當病原體突破皮膜後，受傷部位出現「紅、熱、腫、痛」的現象時，稱為下列何者？", options: ["專一性反應", "發炎反應", "抗體反應", "疫苗反應"], correct: 1, cat: "非專一", feedback: "紅、熱、腫、痛是典型的發炎反應 [cite: 236]。" },
+        { q: "有關「發炎反應」的生理意義，下列敘述何者正確？", options: ["代表病原體獲勝了", "可促使白血球聚集吞噬病原體", "是為了產生更多紅血球攜氧", "是一種第三道防禦機制"], correct: 1, cat: "非專一", feedback: "發炎反應可促使白血球聚集，以吞噬並分解入侵的病原體 [cite: 237, 246]。" },
+        { q: "白血球在第二道防禦中主要的作戰方式為何？", options: ["產生抗體", "進行吞噬作用", "構成物理屏障", "分泌消化鹽酸"], correct: 1, cat: "非專一", feedback: "第二道防禦主要靠白血球進行吞噬作用 [cite: 235, 282]。" },
+        { q: "關於「抗體」的敘述，下列何者正確？", options: ["屬於非專一性防禦", "由特定種類的白血球產生", "可以吞噬所有細菌", "屬於人體的第一道防線"], correct: 1, cat: "專一", feedback: "有一類白血球可以產生抗體，對病原體具有專一性 [cite: 257, 259]。" },
+        { q: "第三道防禦作用中，除產生抗體外，另一種特殊種類的白血球功能為何？", options: ["阻擋食物中病原體", "引發發炎反應", "破壞被感染的細胞", "修復皮膚傷口"], correct: 2, cat: "專一", feedback: "一類白血球可破壞被感染的細胞，阻止病原體繼續繁殖 [cite: 257]。" },
+        { q: "為什麼施打流感疫苗後，還是有可能感染到「水痘」？", options: ["因為疫苗品質不佳", "因為流感疫苗不具記憶性", "因為第三道防禦具專一性", "因為水痘不需要疫苗預防"], correct: 2, cat: "專一", feedback: "專一性防禦只對特定的病原體產生反應 [cite: 259]。" },
+        { q: "施打疫苗預防疾病的原理，主要是利用專一性防禦作用的哪種特性？", options: ["即時性", "非專一性", "記憶性", "化學阻隔性"], correct: 2, cat: "疫苗", feedback: "疫苗是運用專一性防禦作用的記憶性來達到保護效果 [cite: 264]。" },
+        { q: "當人體「第二次」感染相同的病原體時，其防禦反應有何特點？", options: ["反應變慢", "反應更快、效果更強", "完全不產生抗體", "只能靠皮膜阻隔"], correct: 1, cat: "疫苗", feedback: "由於身體有記憶性，第二次感染時反應更快且強度更強 [cite: 265, 277]。" },
+        { q: "觀察下圖曲線，當人體真正感染到與疫苗相同的病原體時，曲線呈現出什麼樣的變化？" + chartHtml, options: ["反應變慢且強度變弱", "反應變快且強度變強", "強度維持不變", "曲線會完全消失"], correct: 1, cat: "疫苗", feedback: "由圖可知，第二次接觸相同病原體時，防禦強度會迅速大幅提升 [cite: 265, 277]。" },
+        { q: "有關人體防禦作用的配對，下列何者「錯誤」？", options: ["皮膜阻隔—第一道防線", "吞噬作用—非專一性防禦", "抗體作用—第二道防線", "發炎反應—非專一性防禦"], correct: 2, cat: "基礎", feedback: "抗體作用屬於第三道防禦（專一性防禦）[cite: 255, 282]。" },
+        { q: "人體感冒時喉嚨痛，吃下的藥物如何到達患部？", options: ["經由呼吸道直接到達", "經由神經系統傳遞", "經由血液循環運輸", "經由淋巴系統過濾"], correct: 2, cat: "基礎", feedback: "物質在體內依賴循環系統運輸完成 [cite: 15, 310]。" },
+        { q: "除接種疫苗外，下列何種行為更有助於免疫系統發揮功能消滅入侵者？", options: ["只吃單一高蛋白食物", "注意飲食和規律作息", "儘量減少睡眠時間", "自行購買強力鹽酸飲用"], correct: 1, cat: "基礎", feedback: "除了施打疫苗，良好的飲食與作息也是維持免疫功能的關鍵 [cite: 260]。" }
+    ];
+
+    const diagnosisTips = {
+        "基礎": { icon: "🌱", title: "防禦概念基礎", text: "你對病原體的定義或物質運輸方式仍有些模糊。記得：循環系統是體內的物流，負責運送藥物與防衛兵力 [cite: 15, 218]。" },
+        "皮膜": { icon: "🛡️", title: "第一道：皮膜阻隔", text: "皮膚與黏膜是身體的守門員。除了物理阻隔，胃酸與酵素的化學破壞也屬於這一道防線 [cite: 226-227]。" },
+        "非專一": { icon: "🔥", title: "第二道：發炎與吞噬", text: "發炎（紅腫熱痛）不是壞事，是身體在叫援軍！白血球聚集到傷口是為了大口吞掉入侵者 [cite: 236-237]。" },
+        "專一": { icon: "🎯", title: "第三道：專一性防禦", text: "這是針對性的狙擊。特定白血球產生的抗體就像一把鑰匙開一把鎖，只針對特定的病原體有效 [cite: 257-259]。" },
+        "疫苗": { icon: "💉", title: "疫苗原理與記憶", text: "疫苗是讓身體先『預演』。利用記憶性，當真正的敵人入侵時，身體的火力（強度）會反應更快、更猛烈 [cite: 264, 277]。" }
+    };
+
+    function initQuiz() {
+        const container = document.getElementById('questions-container');
+        container.innerHTML = ''; // 清空舊內容
+        quizData.forEach((item, index) => {
+            const qDiv = document.createElement('div');
+            qDiv.className = 'question-block';
+            qDiv.innerHTML = `
+                <div class="question-title">${index + 1}. ${item.q}</div>
+                <div class="options-grid">
+                    ${item.options.map((opt, i) => `
+                        <label class="option-label">
+                            <input type="radio" name="q${index}" value="${i}">
+                            <span>${opt}</span>
+                        </label>
+                    `).join('')}
+                </div>
+            `;
+            container.appendChild(qDiv);
+        });
+    }
+
+    function gradeQuiz() {
+        let score = 0;
+        let wrongCats = new Set();
+        const analysis = document.getElementById('analysis-container');
+        analysis.innerHTML = '';
+        let allAnswered = true;
+
+        for (let i = 0; i < quizData.length; i++) {
+            const selected = document.querySelector(`input[name='q${i}']:checked`);
+            if (!selected) {
+                allAnswered = false;
+                break;
+            }
+        }
+
+        if (!allAnswered) {
+            alert("還有題目沒寫完喔！請檢查一下。");
+            return;
+        }
+
+        quizData.forEach((item, index) => {
+            const selected = document.querySelector(`input[name='q${index}']:checked`);
+            const userAns = parseInt(selected.value);
+            const isCorrect = userAns === item.correct;
+            
+            if (isCorrect) {
+                score++;
+            } else {
+                wrongCats.add(item.cat);
+            }
+
+            const feedbackDiv = document.createElement('div');
+            feedbackDiv.className = `feedback-item ${isCorrect ? 'correct' : 'wrong'}`;
+            const cleanQ = item.q.split('<div')[0]; // 移除解析中重複出現的圖表代碼
+            feedbackDiv.innerHTML = `
+                <span class="feedback-q-text">第 ${index + 1} 題：${cleanQ}</span>
+                <strong>結果：${isCorrect ? '✅ 正確' : '❌ 錯誤'}</strong><br>
+                您的選擇：${item.options[userAns]}<br>
+                正確答案：${item.options[item.correct]}
+                <p>💡 解析：${item.feedback}</p>
+            `;
+            analysis.appendChild(feedbackDiv);
+        });
+
+        // 顯示成績與診斷報告
+        document.getElementById('final-score-text').innerText = `你答對了 ${score} / 15 題`;
+        
+        const diagContainer = document.getElementById('diagnosis-container');
+        diagContainer.innerHTML = '';
+        if (wrongCats.size === 0) {
+            diagContainer.innerHTML = '<div class="diagnostic-card" style="border-color: var(--correct-color); background: #f1fcf4;"><div class="diagnostic-icon">🏅</div><div class="diagnostic-content"><h4>防禦大師！</h4><p>恭喜你！你已經完全掌握了人體防禦機制的所有核心觀念！</p></div></div>';
+        } else {
+            wrongCats.forEach(cat => {
+                const tip = diagnosisTips[cat];
+                const card = document.createElement('div');
+                card.className = 'diagnostic-card';
+                card.innerHTML = `<div class="diagnostic-icon">${tip.icon}</div><div class="diagnostic-content"><h4>${tip.title}</h4><p>${tip.text}</p></div>`;
+                diagContainer.appendChild(card);
+            });
+        }
+
+        let evalText = score === 15 ? "🏆 實力驚人！你是免疫系統的指揮官！" : score >= 12 ? "✨ 表現優秀！只需要釐清診斷報告中的分析即可。" : "📖 基礎觀念尚可，請務必詳閱下方診斷建議。";
+        document.getElementById('evaluation-text').innerText = evalText;
+        document.getElementById('quiz-form').style.display = 'none';
+        document.getElementById('result-display').style.display = 'block';
+        window.scrollTo(0, 0);
+    }
+
+    // 確保 DOM 載入後才執行初始化
+    document.addEventListener('DOMContentLoaded', initQuiz);
+</script>
+</body>
+</html>
